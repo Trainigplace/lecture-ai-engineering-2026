@@ -5,12 +5,27 @@
 """
 
 import json
-import random
+import re
+from datetime import datetime
 from functools import cache
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+LEARNING_LOG_DIR = Path(__file__).resolve().parent.parent / "learning_log"
 MAX_RESULTS = 3
+
+
+# 宿題（実装編）: 保存前に利用者の承認を求める学習記録ツール。
+def save_learning_log(title: str, content: str) -> str:
+    """学習記録を learning_log/ に Markdown で保存する。保存には利用者の承認が必要。"""
+    safe_title = re.sub(r'[\\/:*?"<>|\x00-\x1f]', "-", title).strip(" .-_")[:80]
+    if not safe_title:
+        safe_title = "learning-log"
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = LEARNING_LOG_DIR / f"{timestamp}-{safe_title}.md"
+    LEARNING_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"# {title}\n\n{content}\n", encoding="utf-8")
+    return f"学習記録を保存しました: {path.relative_to(LEARNING_LOG_DIR.parent)}"
 
 
 @cache
@@ -80,19 +95,9 @@ def get_lecture_summary(lecture: int) -> str:
     return path.read_text(encoding="utf-8")
 
 def make_quiz(lecture: int) -> str:
-    """指定した回の用語から1つを選び、確認問題と答えを返す。
-
-    「第2回の確認問題を出して」のように、復習用の問題を求められたときに使う。
-    """
-    terms = [term for term in load_glossary() if term["lecture"] == lecture]
-    if not terms:
-        return f"第{lecture}回の用語が用語集に見つかりませんでした。"
-
-    term = random.choice(terms)
-    return json.dumps(
-        {
-            "question": f"「{term['term']}」とは何ですか？",
-            "answer": term["definition"],
-        },
-        ensure_ascii=False,
-    )
+ """指定した回の用語から1つを選び、確認問題と答えを返す。
+ 「第2回の確認問題を出して」のように、復習用の問題を求められたときに使う。
+ """
+# 1. load_glossary() から lecture が一致する用語を集める
+# 2. 1 つ選ぶ（random.choice ）
+# 3. 問題と答えを文字列で返す（json.dumps など）
