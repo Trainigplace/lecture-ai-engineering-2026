@@ -16,7 +16,7 @@ import inspect
 import json
 from pathlib import Path
 
-from pydantic_ai import Agent
+from pydantic_ai import Agent, DeferredToolRequests, DeferredToolResults
 from pydantic_ai.exceptions import ModelHTTPError
 from fastmcp import Client
 from pydantic_ai.mcp import MCPToolset, StdioTransport
@@ -37,10 +37,11 @@ INSTRUCTIONS = """\
 - 宿題の答えそのものは書かず、考え方のヒントで導く。
 """
 
-# モデルは実行時に渡す（テストではAPIを呼ばない TestModel に差し替えるため）
-agent = Agent(instructions=INSTRUCTIONS)
+# 宿題（実装編）: 承認待ちの結果もエージェントの出力として受け取る。
+agent = Agent(instructions=INSTRUCTIONS, output_type=[str, DeferredToolRequests])
 agent.tool_plain(tools.search_glossary)
 agent.tool_plain(tools.get_lecture_summary)
+agent.tool_plain(tools.save_learning_log, requires_approval=True)
 
 # TODO(第3回 演習): tools.py に make_quiz を作り、ここで登録しよう
 
@@ -129,6 +130,19 @@ def main() -> None:
         print("[tools] MCP サーバー（app/mcp_servers.json）")
     try:
         result = target.run_sync(args.question, model=build_model())
+        # 宿題（実装編）: 承認の可否を呼び出しごとに尋ね、履歴と結果を渡して再開する。
+        while isinstance(result.output, DeferredToolRequests):
+            approvals = {}
+            for call in result.output.approvals:
+                print(f"\n保存確認: {call.tool_name}")
+                print(f"内容: {call.args}")
+                answer = input("この学習記録を保存しますか？ [y/N]: ").strip().lower()
+                approvals[call.tool_call_id] = answer in {"y", "yes", "はい"}
+            result = target.run_sync(
+                message_history=result.all_messages(),
+                deferred_tool_results=DeferredToolResults(approvals=approvals),
+                model=build_model(),
+            )
     except ModelHTTPError as e:
         print(api_error_message(e.status_code, str(e.body)[:200]))
         raise SystemExit(1)
