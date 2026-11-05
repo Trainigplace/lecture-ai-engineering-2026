@@ -2,10 +2,18 @@
 
 ## 演習
 
-- 第1回（素のLLM）とエージェントの回答の違い：あｓだｓｄ
+- 第1回（素のLLM）とエージェントの回答の違い：素のLLMの場合は、Glossaryに記載がない部分も説明が行われ、エージェントはGlossaryに沿った回答を行った。
 - `--trace` で見えたツール呼び出し（ツール名と引数）：
-- 1つの質問での LLM 呼び出し回数（`requests`）：
-- 追加したツールと、docstring に書いた説明：
+[tool call]   search_glossary({'query': 'LoRA'})
+[tool call]   search_glossary({'query': 'QLoRA'})
+
+- 1つの質問での LLM 呼び出し回数（`requests`）：２回
+- 追加したツールと、docstring に書いた説明：　
+ツール　：　def make_quiz(lecture: int) -> str:
+書いた説明
+ """指定した回の用語から1つを選び、確認問題と答えを返す。
+ 「第2回の確認問題を出して」のように、復習用の問題を求められたときに使う。
+ """
 
 ## 宿題
 
