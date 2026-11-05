@@ -17,6 +17,19 @@
 質問が用語集の語そのもの：「LoRAとQLoRA」は用語集の見出し語と一致するため、モデルが「検索すべき質問」と判断しやすい題材だったかもしれない。
 
 - 取り組んだレベル：実装
-- やったこと：　app/tools.py に save_learning_log を作り
+- やったこと：　app/tools.py に save_learning_log を作り、def save_learning_log(title: str, content: str) -> str:　を作成した。
 - 結果：
-- 気づき・疑問：
+uv run python -m app.agent --trace "タイトルを「RAGの学習記録」にして、学んだ内容「ベクトル検索で関連文書を探す 」を学習記録として保存して"
+[model] gemini-3.5-flash-lite
+
+保存確認: save_learning_log
+内容: {'title': 'RAGの学習記録', 'content': 'ベクトル検索で関連文書を探す'}
+この学習記録を保存しますか？ [y/N]: N
+学習記録の保存が拒否されました。この操作にはお客様の承認が必要です。保存をご希望の場合は、改めてご指示をお願いいたします。
+
+--- trace ---
+[tool call]   save_learning_log({'title': 'RAGの学習記録', 'content': 'ベクトル検索で関連文書を探す'})
+[tool return] save_learning_log -> The tool call was denied.…
+[usage] RunUsage(cost=Decimal('0.0002101'), details={'text_prompt_tokens': 467}, input_text_tokens=467, input_tokens=467, output_tokens=28, requests=1)
+
+- 気づき・疑問：学習の記録を実装できることができたと思う。今後はAIとの会話から重要なキーワードと内容を記録させていく形になると思うので、活用したい。この記録も今後は自動化できると思うので今後の講義から学びたいと思う。
